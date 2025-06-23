@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Your Expenses</h2>
+
+  <!-- Expenses Table -->
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>Category</th>
+        <th>Amount</th>
+        <th>Date</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in expenses %}
+      <tr>
+        <td>{{ item.category }}</td>
+        <td>{{ item.amount }}</td>
+        <td>{{ item.date }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Export All CSV -->
+  <a href="/export-csv" class="btn btn-success mb-3">Download All Expenses CSV</a>
+
+  <!-- Monthly Preview Toggle -->
+  <button class="btn btn-info mb-3" onclick="togglePreview()">Monthly Expense Overview</button>
+
+  <!-- Monthly Preview Section -->
+  <div id="previewDiv" class="card p-3" style="display: none;">
+    <h4 class="mb-3">Download & View Monthly Expenses</h4>
+
+    <!-- Month Picker Form -->
+    <form id="monthForm" class="d-flex flex-wrap align-items-center gap-2">
+      <label for="month" class="form-label mb-0">Select Month:</label>
+      <input type="month" id="month" name="month" class="form-control" required>
+      <button type="submit" class="btn btn-outline-primary">Show Overview</button>
+      <a id="downloadLink" href="#" class="btn btn-outline-success d-none" download>Download CSV</a>
+      <button type="button" id="sendEmailBtn" class="btn btn-outline-warning d-none">Send to Email</button>
+    </form>
+
+    <!-- ✅ Email Status Message -->
+    <div id="emailStatusMsg" class="mt-2 text-success fw-bold"></div>
+
+    <!-- Summary Table -->
+    <div id="summarySection" class="mt-4" style="display: none;">
+      <h5>Category-wise Summary</h5>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Total Amount (₹)</th>
+          </tr>
+        </thead>
+        <tbody id="summaryTableBody">
+          <!-- Dynamic rows -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script>
+  function togglePreview() {
+    const div = document.getElementById("previewDiv");
+    div.style.display = div.style.display === "none" ? "block" : "none";
+  }
+
+  document.getElementById("monthForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const month = document.getElementById("month").value;
+    if (!month) return;
+
+    // Update download link
+    const downloadLink = document.getElementById("downloadLink");
+    downloadLink.href = `/export-monthly-expense?month=${month}`;
+    downloadLink.classList.remove("d-none");
+
+    // Show Send Email button
+    const sendEmailBtn = document.getElementById("sendEmailBtn");
+    sendEmailBtn.classList.remove("d-none");
+
+    // Clear old message
+    document.getElementById("emailStatusMsg").innerText = "";
+
+    // Fetch summary data
+    const response = await fetch(`/monthly-summary?month=${month}`);
+    const data = await response.json();
+
+    const tableBody = document.getElementById("summaryTableBody");
+    tableBody.innerHTML = "";
+    for (const item of data) {
+      const row = `<tr>
+        <td>${item.category}</td>
+        <td>${item.amount}</td>
+      </tr>`;
+      tableBody.insertAdjacentHTML("beforeend", row);
+    }
+
+    document.getElementById("summarySection").style.display = "block";
+  });
+
+  document.getElementById("sendEmailBtn").addEventListener("click", async function () {
+    const month = document.getElementById("month").value;
+    if (!month) return;
+
+    const formData = new FormData();
+    formData.append("month", month);
+
+    try {
+      const response = await fetch("/send-monthly-csv", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        document.getElementById("emailStatusMsg").innerText = result.message;
+      } else {
+        document.getElementById("emailStatusMsg").innerText = result.error || "Failed to send email.";
+      }
+    } catch (err) {
+      document.getElementById("emailStatusMsg").innerText = "Error occurred while sending email.";
+    }
+  });
+</script>
+{% endblock %}

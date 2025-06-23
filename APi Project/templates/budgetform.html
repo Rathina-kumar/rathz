@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4 text-center">Set Budget for Categories</h2>
+
+  <!-- Month-Year Selection & Budget Form -->
+  <form action="/submit-budget" method="post">
+    <div class="row mb-4">
+      <div class="col-md-6">
+        <label for="budget_month" class="form-label fw-semibold">Select Month</label>
+        <select class="form-select" id="budget_month" name="budget_month" required>
+          {% for num, month in [
+            (1, 'January'), (2, 'February'), (3, 'March'), (4, 'April'),
+            (5, 'May'), (6, 'June'), (7, 'July'), (8, 'August'),
+            (9, 'September'), (10, 'October'), (11, 'November'), (12, 'December')] %}
+            <option value="{{ num }}" {% if selected_month == num %}selected{% endif %}>{{ month }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-6">
+        <label for="budget_year" class="form-label fw-semibold">Select Year</label>
+        <select class="form-select" id="budget_year" name="budget_year" required>
+          {% for year in range(2020, 2031) %}
+            <option value="{{ year }}" {% if selected_year == year %}selected{% endif %}>{{ year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <!-- Budget Inputs -->
+    <div class="mb-3">
+      <label for="food" class="form-label">Food</label>
+      <input type="number" step="0.01" class="form-control" id="food" name="food" required value="{{ food_budget }}">
+    </div>
+    <div class="mb-3">
+      <label for="movie" class="form-label">Movie</label>
+      <input type="number" step="0.01" class="form-control" id="movie" name="movie" required value="{{ movie_budget }}">
+    </div>
+    <div class="mb-3">
+      <label for="travel" class="form-label">Travel</label>
+      <input type="number" step="0.01" class="form-control" id="travel" name="travel" required value="{{ travel_budget }}">
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Budget</button>
+  </form>
+
+  <!-- Progress Overview Section -->
+  <h2 class="mb-4 text-center mt-5">Budget Progress Overview</h2>
+
+  <!-- Food Progress -->
+  <div class="mb-3">
+    <div class="fw-bold">Food - ₹{{ food_spent }} / ₹{{ food_budget }}</div>
+    <div class="progress">
+      <div class="progress-bar bg-success" role="progressbar" 
+           style="width: {{ ((food_spent / food_budget) * 100) | round(0) if food_budget else 0 }}%" 
+           aria-valuenow="{{ ((food_spent / food_budget) * 100) | round(0) if food_budget else 0 }}" 
+           aria-valuemin="0" aria-valuemax="100">
+        {{ ((food_spent / food_budget) * 100) | round(0) if food_budget else 0 }}%
+      </div>
+    </div>
+  </div>
+
+  <!-- Movie Progress -->
+  <div class="mb-3">
+    <div class="fw-bold">Movie - ₹{{ movies_spent }} / ₹{{ movie_budget }}</div>
+    <div class="progress">
+      <div class="progress-bar bg-info" role="progressbar" 
+           style="width: {{ ((movies_spent / movie_budget) * 100) | round(0) if movie_budget else 0 }}%" 
+           aria-valuenow="{{ ((movies_spent / movie_budget) * 100) | round(0) if movie_budget else 0 }}" 
+           aria-valuemin="0" aria-valuemax="100">
+        {{ ((movies_spent / movie_budget) * 100) | round(0) if movie_budget else 0 }}%
+      </div>
+    </div>
+  </div>
+
+  <!-- Travel Progress -->
+  <div class="mb-3">
+    <div class="fw-bold">Travel - ₹{{ travel_spent }} / ₹{{ travel_budget }}</div>
+    <div class="progress">
+      <div class="progress-bar bg-warning" role="progressbar" 
+           style="width: {{ ((travel_spent / travel_budget) * 100) | round(0) if travel_budget else 0 }}%" 
+           aria-valuenow="{{ ((travel_spent / travel_budget) * 100) | round(0) if travel_budget else 0 }}" 
+           aria-valuemin="0" aria-valuemax="100">
+        {{ ((travel_spent / travel_budget) * 100) | round(0) if travel_budget else 0 }}%
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Progress -->
+  <div class="mb-3">
+    <div class="fw-bold">Total - ₹{{ total_spent }} / ₹{{ total_budget }}</div>
+    <div class="progress">
+      <div class="progress-bar bg-danger" role="progressbar" 
+           style="width: {{ ((total_spent / total_budget) * 100) | round(0) if total_budget else 0 }}%" 
+           aria-valuenow="{{ ((total_spent / total_budget) * 100) | round(0) if total_budget else 0 }}" 
+           aria-valuemin="0" aria-valuemax="100">
+        {{ ((total_spent / total_budget) * 100) | round(0) if total_budget else 0 }}%
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- JavaScript to Auto-Reload on Dropdown Change -->
+<script>
+  const monthDropdown = document.getElementById("budget_month");
+  const yearDropdown = document.getElementById("budget_year");
+
+  monthDropdown.addEventListener("change", () => {
+    const month = monthDropdown.value;
+    const year = yearDropdown.value;
+    window.location.href = `/budgetform?month=${month}&year=${year}`;
+  });
+
+  yearDropdown.addEventListener("change", () => {
+    const month = monthDropdown.value;
+    const year = yearDropdown.value;
+    window.location.href = `/budgetform?month=${month}&year=${year}`;
+  });
+</script>
+{% endblock %}
